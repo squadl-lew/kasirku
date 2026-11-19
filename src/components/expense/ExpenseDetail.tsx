@@ -5,9 +5,14 @@ import { formatCurrency, formatDate } from "../../../utils/format";
 interface ExpenseDetailProps {
   expense: Expense;
   restock?: Restock | null;
+  onClose: () => void;
 }
 
-export default function ExpenseDetail({ expense, restock }: ExpenseDetailProps) {
+export default function ExpenseDetail({
+  expense,
+  restock,
+  onClose,
+}: ExpenseDetailProps) {
   return (
     <div className="space-y-3 text-sm">
       <p className="font-medium text-gray-800 dark:text-gray-100">
@@ -20,7 +25,7 @@ export default function ExpenseDetail({ expense, restock }: ExpenseDetailProps) 
       {restock ? (
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-gray-200 text-gray-500 dark:border-neutral-800 dark:text-gray-400">
+            <tr className="border-b border-[#d8e5d8] text-gray-500 dark:border-neutral-800 dark:text-gray-400">
               <th className="py-2 pr-2 font-medium">Produk</th>
               <th className="py-2 pr-2 font-medium">Jumlah</th>
               <th className="py-2 pr-2 font-medium">Harga Beli</th>
@@ -31,7 +36,7 @@ export default function ExpenseDetail({ expense, restock }: ExpenseDetailProps) 
             {restock.items.map((item) => (
               <tr
                 key={item.productId}
-                className="border-b border-gray-100 last:border-0 dark:border-neutral-800"
+                className="border-b border-[#d8e5d8] last:border-0 dark:border-neutral-800"
               >
                 <td className="py-2 pr-2">{item.productName}</td>
                 <td className="py-2 pr-2">x{item.quantity}</td>
@@ -43,14 +48,25 @@ export default function ExpenseDetail({ expense, restock }: ExpenseDetailProps) 
         </table>
       ) : (
         <p className="text-gray-600 dark:text-gray-300">
-          {expense.description ?? "-"}
+          Pengeluaran ini tidak punya rincian item — ini pengeluaran umum,
+          bukan restok.
         </p>
       )}
 
-      <p className="flex justify-between border-t border-gray-200 pt-3 font-bold text-gray-800 dark:border-neutral-800 dark:text-gray-100">
+      <p className="flex justify-between border-t border-[#d8e5d8] pt-3 font-bold text-gray-800 dark:border-neutral-800 dark:text-gray-100">
         <span>Total pengeluaran</span>
         <span>− {formatCurrency(expense.amount)}</span>
       </p>
+
+      <div className="flex justify-end pt-2">
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-[#edf4ed] dark:text-gray-300 dark:hover:bg-neutral-800"
+        >
+          Tutup
+        </button>
+      </div>
     </div>
   );
 }

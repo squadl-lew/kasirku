@@ -1,25 +1,34 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { expenseServices } from "../../../../service/expense.service";
 import { restockServices } from "../../../../service/restock.service";
+import { loadDummyExpenses } from "../../../lib/dummy/expenseStore";
+import { addActivity } from "../../../lib/dummy/activityLog";
 import {
   expenseSchema,
   type ExpenseFormValues,
 } from "../../../lib/validation/expenseSchema";
-import { alertConfirm } from "../../../lib/alert";
 import { todayISO } from "../../../../utils/format";
 import type { ToasterState } from "../../ui/Toaster";
 import type { Expense, ICreateExpense } from "../../../../types/Expense";
 
 export const useExpense = () => {
   const queryClient = useQueryClient();
-  const [date, setDate] = useState(todayISO());
+  const today = todayISO();
+  const month = today.slice(0, 7);
+  const [date, setDate] = useState(today);
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [detail, setDetail] = useState<Expense | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Expense | null>(null);
   const [toaster, setToaster] = useState<ToasterState | null>(null);
+  const deleteNameRef = useRef<{
+    title: string;
+    category: string;
+    amount: number;
+  } | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["expenses", date, search],
@@ -35,6 +44,20 @@ export const useExpense = () => {
     },
   });
 
+  // Ringkasan bulan berjalan (kartu statistik, bukan yang terfilter)
+  const { data: monthSummary } = useQuery({
+    queryKey: ["expenses", "month", month],
+    queryFn: async () => {
+      const list = loadDummyExpenses().filter((e) =>
+        e.date.startsWith(month),
+      );
+      return {
+        total: list.reduce((sum, e) => sum + e.amount, 0),
+        count: list.length,
+      };
+    },
+  });
+
   // Item restok untuk modal rincian (kalau expense berasal dari restok)
   const { data: detailRestock } = useQuery({
     queryKey: ["restocks", detail?.restockId],
@@ -47,7 +70,12 @@ export const useExpense = () => {
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
-    defaultValues: { title: "", category: "Operasional", amount: 0, date: todayISO() },
+    defaultValues: {
+      title: "",
+      category: "Operasional",
+      amount: 0,
+      date: today,
+    },
     mode: "onBlur",
   });
 
@@ -55,6 +83,7 @@ export const useExpense = () => {
     queryClient.invalidateQueries({ queryKey: ["expenses"] });
     queryClient.invalidateQueries({ queryKey: ["restocks"] });
     queryClient.invalidateQueries({ queryKey: ["products"] });
+    queryClient.invalidateQueries({ queryKey: ["activities"] });
   };
 
   const { mutate: mutateCreate, isPending: isSaving } = useMutation({
@@ -62,7 +91,14 @@ export const useExpense = () => {
       expenseServices.createExpense(payload),
     onError: (error) =>
       setToaster({ type: "error", message: error.message }),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      const created = res.data.data;
+      addActivity({
+        kind: "expense",
+        label: created.title,
+        detail: created.category,
+        amount: -created.amount,
+      });
       setToaster({ type: "success", message: "Pengeluaran berhasil ditambah" });
       setFormOpen(false);
       refresh();
@@ -74,24 +110,35 @@ export const useExpense = () => {
     onError: (error) =>
       setToaster({ type: "error", message: error.message }),
     onSuccess: () => {
+      const deleted = deleteNameRef.current;
+      if (deleted) {
+        addActivity({
+          kind: "expense",
+          label: `Pengeluaran "${deleted.title}" dihapus`,
+          detail: deleted.category,
+          amount: -deleted.amount,
+        });
+        deleteNameRef.current = null;
+      }
       setToaster({ type: "success", message: "Pengeluaran berhasil dihapus" });
       refresh();
     },
   });
 
   const openCreate = () => {
-    form.reset({ title: "", category: "Operasional", amount: 0, date: todayISO() });
+    form.reset({ title: "", category: "Operasional", amount: 0, date: today });
     setFormOpen(true);
   };
 
-  const handleDelete = async (expense: Expense) => {
-    const extra =
-      expense.restockId !== undefined
-        ? " Restoknya juga ikut terhapus dan stok dikembalikan."
-        : "";
-    if (!(await alertConfirm(`Hapus pengeluaran "${expense.title}"?${extra}`)))
-      return;
-    mutateDelete(expense.id);
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteNameRef.current = {
+      title: deleteTarget.title,
+      category: deleteTarget.category,
+      amount: deleteTarget.amount,
+    };
+    mutateDelete(deleteTarget.id);
+    setDeleteTarget(null);
   };
 
   const handleSubmit = (values: ExpenseFormValues) => {
@@ -109,6 +156,7 @@ export const useExpense = () => {
     expenses: data?.data ?? [],
     isLoading,
     isError,
+    monthSummary: monthSummary ?? { total: 0, count: 0 },
     date,
     setDate,
     search,
@@ -121,7 +169,9 @@ export const useExpense = () => {
     detail,
     setDetail,
     detailRestock: detailRestock ?? null,
-    handleDelete,
+    deleteTarget,
+    setDeleteTarget,
+    confirmDelete,
     onSubmit: form.handleSubmit(handleSubmit),
     isSaving,
     toaster,

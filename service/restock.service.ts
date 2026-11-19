@@ -60,6 +60,8 @@ const restockServices = {
     const totalAmount = items.reduce((sum, i) => sum + i.subtotal, 0);
     const restock: Restock = {
       id: Date.now(),
+      date: payload.date,
+      note: payload.note,
       items,
       totalAmount,
       createdAt: new Date().toISOString(),
@@ -67,6 +69,23 @@ const restockServices = {
     saveRestocks([restock, ...loadRestocks()]);
     // Stok naik (dummy overlay) + satu Expense "Belanja Stok"
     items.forEach((i) => addStockAdjustment(i.productId, i.quantity));
+    // buyPrice produk di-update ke harga beli restok terakhir (prototype).
+    // products di atas diambil langsung dari BE (tanpa overlay dummy),
+    // jadi stock yang dikirim = stok ASLI BE — hanya buyPrice yang berubah.
+    for (const item of items) {
+      const product = products.data.find((p) => p.id === item.productId)!;
+      if (product.buyPrice !== item.buyPrice) {
+        await productServices.updateProduct(product.id, {
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          description: product.description,
+          buyPrice: item.buyPrice,
+          sellPrice: product.sellPrice,
+          stock: product.stock,
+        });
+      }
+    }
     addDummyExpense({
       title: "Belanja Stok",
       category: "Belanja Stok",
@@ -74,7 +93,7 @@ const restockServices = {
       description: items
         .map((i) => `${i.productName} x${i.quantity}`)
         .join(", "),
-      date: restock.createdAt.slice(0, 10),
+      date: payload.date,
       restockId: restock.id,
     });
     return { data: { data: restock } } as { data: ApiResponse<Restock> };

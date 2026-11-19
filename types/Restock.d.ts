@@ -8,12 +8,16 @@ export interface RestockItem {
 
 export interface Restock {
   id: number;
+  date: string; // YYYY-MM-DD — Tanggal belanja
+  note?: string; // Catatan / toko tempat belanja
   items: RestockItem[];
   totalAmount: number; // Total Belanja
   createdAt: string;
 }
 
 export interface ICreateRestock {
+  date: string;
+  note?: string;
   items: Array<{ productId: number; quantity: number; buyPrice: number }>;
 }
 

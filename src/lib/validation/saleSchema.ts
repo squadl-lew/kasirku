@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const saleSchema = z
   .object({
-    paymentMethod: z.enum(["CASH", "QRIS", "TRANSFER"]),
+    paymentMethod: z.enum(["CASH", "QRIS", "CARD"]),
     // uang diterima — hanya wajib kalau Tunai
     cashReceived: z.coerce.number().int().min(0).optional(),
   })

@@ -25,7 +25,7 @@ export default function ExpenseList({
       {expenses.map((expense) => (
         <li
           key={expense.id}
-          className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 p-4 dark:border-neutral-800"
+          className="flex items-center justify-between gap-3 rounded-xl border border-[#d8e5d8] p-4 dark:border-neutral-800"
         >
           <div className="min-w-0">
             <p className="truncate text-sm font-medium text-gray-800 dark:text-gray-100">
@@ -38,20 +38,20 @@ export default function ExpenseList({
               className={`mt-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                 expense.category === "Belanja Stok"
                   ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                  : "bg-gray-100 text-gray-600 dark:bg-neutral-800 dark:text-gray-300"
+                  : "bg-[#edf4ed] text-gray-600 dark:bg-neutral-800 dark:text-gray-300"
               }`}
             >
               {expense.category}
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
+            <span className="text-sm font-bold text-red-600 dark:text-red-400">
               − {formatCurrency(expense.amount)}
             </span>
             <button
               type="button"
               onClick={() => onDetail(expense)}
-              className="rounded-lg px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-neutral-800"
+              className="rounded-lg px-2 py-1 text-xs font-medium text-gray-600 hover:bg-[#edf4ed] dark:text-gray-300 dark:hover:bg-neutral-800"
             >
               Lihat rincian
             </button>

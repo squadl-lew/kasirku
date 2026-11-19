@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { useRestock } from "./useRestock.tsx";
 import RestockForm from "../../restock/RestockForm.tsx";
 import RestockList from "../../restock/RestockList.tsx";
@@ -12,15 +13,10 @@ export default function Restock() {
     fields,
     remove,
     addItem,
-    pickerOpen,
-    setPickerOpen,
-    pickerSearch,
-    setPickerSearch,
     totalBelanja,
     form,
     onSubmit,
     isSaving,
-    handleDelete,
     toaster,
   } = useRestock();
 
@@ -28,13 +24,9 @@ export default function Restock() {
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100">
-        Restok
-      </h1>
-
-      <div className="mb-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="mx-auto mb-4 max-w-[880px] rounded-xl border border-[#d8e5d8] bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-[#1a1b1d]">
         <h2 className="mb-4 text-lg font-bold text-gray-800 dark:text-gray-100">
-          Restok Baru
+          Form belanja / restok
         </h2>
         {isLoadingProducts ? (
           <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
@@ -46,10 +38,6 @@ export default function Restock() {
             fields={fields}
             items={items}
             products={products}
-            pickerOpen={pickerOpen}
-            setPickerOpen={setPickerOpen}
-            pickerSearch={pickerSearch}
-            setPickerSearch={setPickerSearch}
             addItem={addItem}
             removeItem={remove}
             totalBelanja={totalBelanja}
@@ -59,16 +47,24 @@ export default function Restock() {
         )}
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-        <h2 className="mb-4 text-lg font-bold text-gray-800 dark:text-gray-100">
-          Riwayat Restok
-        </h2>
+      <div className="mx-auto max-w-[880px] rounded-xl border border-[#d8e5d8] bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-[#1a1b1d]">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+            Restok terakhir
+          </h2>
+          <Link
+            to="/pengeluaran"
+            className="text-sm font-medium text-green-700 hover:underline dark:text-green-400"
+          >
+            Lihat di Pengeluaran
+          </Link>
+        </div>
         {isLoadingRestocks ? (
           <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
             Memuat riwayat...
           </p>
         ) : (
-          <RestockList restocks={restocks} onDelete={handleDelete} />
+          <RestockList restocks={restocks.slice(0, 5)} />
         )}
       </div>
 
