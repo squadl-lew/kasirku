@@ -1,10 +1,9 @@
 import type { UseFormReturn } from "react-hook-form";
 import type { ProductFormValues } from "../../lib/validation/productSchema";
-import type { Product } from "../../../types/Product";
 
 interface ProductFormProps {
   form: UseFormReturn<ProductFormValues>;
-  editing: Product | null;
+  categories: string[];
   onSubmit: () => void;
   onClose: () => void;
   isSaving: boolean;
@@ -12,7 +11,7 @@ interface ProductFormProps {
 
 export default function ProductForm({
   form,
-  editing,
+  categories,
   onSubmit,
   onClose,
   isSaving,
@@ -27,22 +26,18 @@ export default function ProductForm({
   const errorClass = "mt-1 text-xs text-red-600 dark:text-red-400";
 
   return (
-    <form
-      onSubmit={onSubmit}
-      noValidate
-      className="space-y-4"
-    >
+    <form onSubmit={onSubmit} noValidate className="space-y-4">
       <div>
         <label
           htmlFor="name"
           className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200"
         >
-          Nama
+          Nama produk
         </label>
         <input
           id="name"
           type="text"
-          placeholder="Nama produk"
+          placeholder="cth. Kopi Susu 250ml"
           className={inputClass}
           {...register("name")}
         />
@@ -56,34 +51,32 @@ export default function ProductForm({
         >
           Kategori
         </label>
-        <input
-          id="category"
-          type="text"
-          placeholder="Kategori produk"
-          className={inputClass}
-          {...register("category")}
-        />
+        <select id="category" className={inputClass} {...register("category")}>
+          <option value="">Pilih kategori</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
         {errors.category && (
           <p className={errorClass}>{errors.category.message}</p>
         )}
-      </div>
-
-      <div>
         <label
-          htmlFor="description"
-          className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200"
+          htmlFor="categoryNew"
+          className="mb-1 mt-3 block text-sm font-medium text-gray-700 dark:text-gray-200"
         >
-          Deskripsi <span className="font-normal text-gray-400">(opsional)</span>
+          atau kategori baru
         </label>
-        <textarea
-          id="description"
-          placeholder="Deskripsi produk"
-          rows={2}
+        <input
+          id="categoryNew"
+          type="text"
+          placeholder="cth. Frozen"
           className={inputClass}
-          {...register("description")}
+          {...register("categoryNew")}
         />
-        {errors.description && (
-          <p className={errorClass}>{errors.description.message}</p>
+        {errors.categoryNew && (
+          <p className={errorClass}>{errors.categoryNew.message}</p>
         )}
       </div>
 
@@ -93,12 +86,14 @@ export default function ProductForm({
             htmlFor="buyPrice"
             className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200"
           >
-            Harga Beli (Rp)
+            Harga beli (modal) — Rp
           </label>
           <input
             id="buyPrice"
             type="number"
             min={0}
+            step={100}
+            placeholder="0"
             className={inputClass}
             {...register("buyPrice")}
           />
@@ -112,12 +107,14 @@ export default function ProductForm({
             htmlFor="sellPrice"
             className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200"
           >
-            Harga Jual (Rp)
+            Harga jual — Rp
           </label>
           <input
             id="sellPrice"
             type="number"
             min={0}
+            step={100}
+            placeholder="0"
             className={inputClass}
             {...register("sellPrice")}
           />
@@ -127,32 +124,11 @@ export default function ProductForm({
         </div>
       </div>
 
-      {editing !== null && (
-        <div>
-          <label
-            htmlFor="stock"
-            className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200"
-          >
-            Stok
-          </label>
-          <input
-            id="stock"
-            type="number"
-            min={0}
-            className={inputClass}
-            {...register("stock")}
-          />
-          {errors.stock && (
-            <p className={errorClass}>{errors.stock.message}</p>
-          )}
-        </div>
-      )}
-
       <div className="flex justify-end gap-2 pt-2">
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-neutral-800"
+          className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-[#edf4ed] dark:text-gray-300 dark:hover:bg-neutral-800"
         >
           Batal
         </button>
@@ -161,7 +137,7 @@ export default function ProductForm({
           disabled={isSaving}
           className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
         >
-          {isSaving ? "Menyimpan..." : "Simpan"}
+          {isSaving ? "Menyimpan..." : "Simpan produk"}
         </button>
       </div>
     </form>

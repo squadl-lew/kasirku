@@ -1,6 +1,11 @@
 import { z } from "zod";
 
 export const restockSchema = z.object({
+  date: z
+    .string()
+    .min(1, "Tanggal belanja wajib diisi")
+    .refine((v) => !Number.isNaN(Date.parse(v)), "Tanggal tidak valid"),
+  note: z.string().max(255).optional(),
   items: z
     .array(
       z.object({

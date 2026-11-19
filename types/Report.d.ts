@@ -21,7 +21,8 @@ export interface RangeReport {
 export interface ReportTransaction {
   id: string;
   date: string; // YYYY-MM-DD
-  label: string; // nomor invoice (penjualan) atau keterangan (pengeluaran)
+  time: string; // HH:mm
+  label: string; // "Penjualan INV-... (N item)" atau keterangan pengeluaran
   type: "sale" | "expense";
   amount: number; // + untuk penjualan, - untuk pengeluaran
 }

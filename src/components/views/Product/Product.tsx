@@ -1,7 +1,6 @@
 import { useProduct } from "./useProduct.tsx";
 import ProductTable from "../../product/ProductTable.tsx";
 import ProductForm from "../../product/ProductForm.tsx";
-import ProductDetail from "../../product/ProductDetail.tsx";
 import Modal from "../../ui/Modal.tsx";
 import Pagination from "../../ui/Pagination.tsx";
 import Toaster from "../../ui/Toaster.tsx";
@@ -10,35 +9,36 @@ export default function Product() {
   const {
     products,
     paging,
+    totalItems,
     isLoading,
     isError,
     name,
     setName,
     category,
     setCategory,
+    categories,
     page,
     setPage,
-    handleSearch,
     form,
     formOpen,
     setFormOpen,
     editing,
     openCreate,
     openEdit,
-    detail,
-    setDetail,
-    handleDelete,
+    deleteTarget,
+    setDeleteTarget,
+    confirmDelete,
     onSubmit,
     isSaving,
     toaster,
   } = useProduct();
 
+  const inputClass =
+    "flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-green-600 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-100";
+
   return (
     <>
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-          Produk
-        </h1>
+      <div className="mb-4 flex items-center justify-end">
         <button
           type="button"
           onClick={openCreate}
@@ -48,29 +48,29 @@ export default function Product() {
         </button>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-        <form onSubmit={handleSearch} className="mb-4 flex flex-col gap-2 sm:flex-row">
+      <div className="rounded-xl border border-[#d8e5d8] bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-[#1a1b1d]">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row">
           <input
-            type="text"
-            placeholder="Cari nama produk"
+            type="search"
+            placeholder="Cari nama produk…"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-green-600 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-100"
+            className={inputClass}
           />
-          <input
-            type="text"
-            placeholder="Kategori"
+          <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-green-600 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-100"
-          />
-          <button
-            type="submit"
-            className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+            className={inputClass}
+            aria-label="Kategori"
           >
-            <i className="fas fa-search mr-2"></i>Cari
-          </button>
-        </form>
+            <option value="">Semua kategori</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {isLoading && (
           <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
@@ -86,15 +86,17 @@ export default function Product() {
         {!isLoading && !isError && (
           <ProductTable
             products={products}
-            onDetail={setDetail}
             onEdit={openEdit}
-            onDelete={handleDelete}
+            onDelete={setDeleteTarget}
           />
         )}
         {paging && (
           <Pagination
             currentPage={page}
             totalPage={paging.total_page}
+            totalItems={totalItems}
+            pageSize={5}
+            itemLabel="produk"
             onPageChange={setPage}
           />
         )}
@@ -107,7 +109,7 @@ export default function Product() {
       >
         <ProductForm
           form={form}
-          editing={editing}
+          categories={categories}
           onSubmit={onSubmit}
           onClose={() => setFormOpen(false)}
           isSaving={isSaving}
@@ -115,11 +117,33 @@ export default function Product() {
       </Modal>
 
       <Modal
-        open={detail !== null}
-        onClose={() => setDetail(null)}
-        title="Detail Produk"
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        title="Hapus produk?"
       >
-        {detail && <ProductDetail product={detail} />}
+        {deleteTarget && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Produk {deleteTarget.name} akan dihapus dari daftar.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-[#edf4ed] dark:text-gray-300 dark:hover:bg-neutral-800"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+              >
+                Ya, hapus
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       <Toaster toaster={toaster} />

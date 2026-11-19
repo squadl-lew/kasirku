@@ -43,7 +43,7 @@ export default function ExpenseForm({
         <input
           id="title"
           type="text"
-          placeholder="Contoh: Beli gula 5kg"
+          placeholder="cth. Beli plastik & kantong belanja"
           className={inputClass}
           {...register("title")}
         />
@@ -81,6 +81,8 @@ export default function ExpenseForm({
             id="amount"
             type="number"
             min={1}
+            step={500}
+            placeholder="0"
             className={inputClass}
             {...register("amount")}
           />
@@ -110,7 +112,7 @@ export default function ExpenseForm({
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-neutral-800"
+          className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-[#edf4ed] dark:text-gray-300 dark:hover:bg-neutral-800"
         >
           Batal
         </button>
@@ -119,7 +121,7 @@ export default function ExpenseForm({
           disabled={isSaving}
           className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
         >
-          {isSaving ? "Menyimpan..." : "Simpan"}
+          {isSaving ? "Menyimpan..." : "Simpan pengeluaran"}
         </button>
       </div>
     </form>

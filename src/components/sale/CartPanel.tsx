@@ -15,7 +15,7 @@ export default function CartPanel({
   if (cart.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-        Keranjang masih kosong. Klik produk untuk menambah.
+        Keranjang kosong. Klik produk di sebelah kiri untuk menambahkan.
       </p>
     );
   }
@@ -26,7 +26,7 @@ export default function CartPanel({
         {cart.map((item) => (
           <li
             key={item.product.id}
-            className="flex items-center justify-between gap-2 border-b border-gray-100 pb-3 last:border-0 dark:border-neutral-800"
+            className="flex items-center justify-between gap-2 border-b border-[#d8e5d8] pb-3 last:border-0 dark:border-neutral-800"
           >
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-gray-800 dark:text-gray-100">
@@ -43,7 +43,7 @@ export default function CartPanel({
                 onClick={() =>
                   onUpdateQuantity(item.product.id, item.quantity - 1)
                 }
-                className="h-7 w-7 rounded-lg bg-gray-100 text-sm font-bold text-gray-600 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300"
+                className="h-7 w-7 rounded-lg bg-[#edf4ed] text-sm font-bold text-gray-600 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300"
                 aria-label="Kurangi jumlah"
               >
                 -
@@ -56,7 +56,7 @@ export default function CartPanel({
                 onClick={() =>
                   onUpdateQuantity(item.product.id, item.quantity + 1)
                 }
-                className="h-7 w-7 rounded-lg bg-gray-100 text-sm font-bold text-gray-600 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300"
+                className="h-7 w-7 rounded-lg bg-[#edf4ed] text-sm font-bold text-gray-600 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300"
                 aria-label="Tambah jumlah"
               >
                 +
@@ -72,7 +72,11 @@ export default function CartPanel({
           </li>
         ))}
       </ul>
-      <div className="mt-4 flex justify-between border-t border-gray-200 pt-3 text-base font-bold text-gray-800 dark:border-neutral-800 dark:text-gray-100">
+      <div className="mt-4 flex justify-between border-t border-[#d8e5d8] pt-3 text-sm text-gray-600 dark:border-neutral-800 dark:text-gray-300">
+        <span>Subtotal</span>
+        <span>{formatCurrency(totalAmount)}</span>
+      </div>
+      <div className="mt-2 flex justify-between text-base font-bold text-gray-800 dark:text-gray-100">
         <span>Total</span>
         <span>{formatCurrency(totalAmount)}</span>
       </div>

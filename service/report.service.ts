@@ -1,6 +1,6 @@
 import { loadDummySales } from "./sale.service";
 import { loadDummyExpenses } from "../src/lib/dummy/expenseStore";
-import { todayISO, toLocalDateISO } from "../utils/format";
+import { formatTimeHM, todayISO, toLocalDateISO } from "../utils/format";
 import type { ApiResponse } from "../types/api";
 import type {
   DailyReport,
@@ -95,7 +95,8 @@ const reportServices = {
       .map((s) => ({
         id: `sale-${s.id}`,
         date: toLocalDateISO(s.createdAt),
-        label: s.invoiceNumber,
+        time: formatTimeHM(s.createdAt),
+        label: `Penjualan ${s.invoiceNumber} (${s.items.length} item)`,
         type: "sale" as const,
         amount: s.totalAmount,
       }));
@@ -104,12 +105,14 @@ const reportServices = {
       .map((e) => ({
         id: `expense-${e.id}`,
         date: e.date,
+        time: formatTimeHM(e.createdAt),
         label: e.title,
         type: "expense" as const,
         amount: -e.amount,
       }));
-    const data = [...sales, ...expenses].sort((a, b) =>
-      b.date.localeCompare(a.date),
+    const data = [...sales, ...expenses].sort(
+      (a, b) =>
+        b.date.localeCompare(a.date) || b.time.localeCompare(a.time),
     );
     return { data: { data } } as { data: ApiResponse<ReportTransaction[]> };
   },

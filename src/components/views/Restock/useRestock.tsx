@@ -3,22 +3,23 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFieldArray } from "react-hook-form";
+import { useNavigate } from "react-router";
 import { restockServices } from "../../../../service/restock.service";
 import { productServices } from "../../../../service/product.service";
 import { applyStockAdjustments } from "../../../lib/dummy/stockAdjustments";
+import { addActivity } from "../../../lib/dummy/activityLog";
 import {
   restockSchema,
   type RestockFormValues,
 } from "../../../lib/validation/restockSchema";
-import { alertConfirm } from "../../../lib/alert";
+import { formatCurrency, todayISO } from "../../../../utils/format";
 import type { ToasterState } from "../../ui/Toaster";
-import type { ICreateRestock, Restock } from "../../../../types/Restock";
+import type { ICreateRestock } from "../../../../types/Restock";
 import type { Product } from "../../../../types/Product";
 
 export const useRestock = () => {
   const queryClient = useQueryClient();
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [pickerSearch, setPickerSearch] = useState("");
+  const navigate = useNavigate();
   const [toaster, setToaster] = useState<ToasterState | null>(null);
 
   // Semua produk (termasuk stok 0) — restok hanya untuk produk yang sudah ada
@@ -40,7 +41,7 @@ export const useRestock = () => {
 
   const form = useForm<RestockFormValues>({
     resolver: zodResolver(restockSchema),
-    defaultValues: { items: [] },
+    defaultValues: { date: todayISO(), note: "", items: [] },
     mode: "onBlur",
   });
   const { fields, append, remove } = useFieldArray({
@@ -56,6 +57,8 @@ export const useRestock = () => {
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["restocks"] });
     queryClient.invalidateQueries({ queryKey: ["products"] });
+    queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    queryClient.invalidateQueries({ queryKey: ["activities"] });
   };
 
   const { mutate: mutateCreate, isPending: isSaving } = useMutation({
@@ -63,42 +66,39 @@ export const useRestock = () => {
       restockServices.createRestock(payload),
     onError: (error) =>
       setToaster({ type: "error", message: error.message }),
-    onSuccess: () => {
-      setToaster({ type: "success", message: "Restok berhasil disimpan" });
-      form.reset({ items: [] });
+    onSuccess: (res) => {
+      const restock = res.data.data;
+      addActivity({
+        kind: "restock",
+        label: `Restok: ${restock.items
+          .map((i) => `${i.productName} x${i.quantity}`)
+          .join(", ")}`,
+        detail: "Belanja Stok",
+        amount: -restock.totalAmount,
+      });
+      setToaster({
+        type: "success",
+        message: `Restok tersimpan: stok bertambah & pengeluaran ${formatCurrency(restock.totalAmount)} tercatat`,
+      });
+      form.reset({ date: todayISO(), note: "", items: [] });
       refresh();
-    },
-  });
-
-  const { mutate: mutateDelete } = useMutation({
-    mutationFn: (id: number) => restockServices.deleteRestock(id),
-    onError: (error) =>
-      setToaster({ type: "error", message: error.message }),
-    onSuccess: () => {
-      setToaster({ type: "success", message: "Restok berhasil dibatalkan" });
-      refresh();
+      // Toast sempat terlihat dulu, baru pindah ke Pengeluaran (toast
+      // tinggal di halaman ini, ikut hilang kalau langsung navigasi)
+      setTimeout(() => navigate("/pengeluaran"), 1200);
     },
   });
 
   const addItem = (product: Product) => {
     if (fields.some((f) => f.productId === product.id)) return; // sudah ada di list
     append({ productId: product.id, quantity: 1, buyPrice: product.buyPrice });
-    setPickerOpen(false);
-    setPickerSearch("");
-  };
-
-  const handleDelete = async (restock: Restock) => {
-    if (
-      !(await alertConfirm(
-        `Batalkan restok ${restock.items.length} item senilai ${restock.totalAmount}? Stok dan pengeluarannya akan dikembalikan.`,
-      ))
-    )
-      return;
-    mutateDelete(restock.id);
   };
 
   const handleSubmit = (values: RestockFormValues) => {
-    mutateCreate({ items: values.items });
+    mutateCreate({
+      date: values.date,
+      note: values.note?.trim() ? values.note.trim() : undefined,
+      items: values.items,
+    });
   };
 
   return {
@@ -109,15 +109,10 @@ export const useRestock = () => {
     fields,
     remove,
     addItem,
-    pickerOpen,
-    setPickerOpen,
-    pickerSearch,
-    setPickerSearch,
     totalBelanja,
     form,
     onSubmit: form.handleSubmit(handleSubmit),
     isSaving,
-    handleDelete,
     toaster,
   };
 };

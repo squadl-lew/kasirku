@@ -1,6 +1,6 @@
 import type { Product } from "./Product";
 
-export type PaymentMethod = "CASH" | "QRIS" | "TRANSFER";
+export type PaymentMethod = "CASH" | "QRIS" | "CARD";
 
 export interface SaleItem {
   productId: number;

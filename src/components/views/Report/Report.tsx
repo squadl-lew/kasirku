@@ -1,6 +1,6 @@
 import { useReport } from "./useReport.tsx";
-import DailyChart from "../../report/DailyChart.tsx";
-import { formatCurrency, formatDate } from "../../../../utils/format";
+import type { ReportGranularity } from "./useReport.tsx";
+import { formatCurrency, formatDateLong } from "../../../../utils/format";
 
 export default function Report() {
   const {
@@ -12,10 +12,16 @@ export default function Report() {
     setStartDate,
     endDate,
     setEndDate,
-    month,
-    setMonth,
-    year,
-    setYear,
+    startMonth,
+    setStartMonth,
+    endMonth,
+    setEndMonth,
+    startYear,
+    setStartYear,
+    endYear,
+    setEndYear,
+    applyRange,
+    periodLabel,
     report,
     transactions,
     isLoading,
@@ -41,78 +47,152 @@ export default function Report() {
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100">
-        Laporan
-      </h1>
-
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-neutral-800">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
+        <div className="flex gap-1 rounded-lg bg-[#edf4ed] p-1 dark:bg-neutral-800">
           {modeButton("today", "Hari Ini")}
           {modeButton("all", "Semua")}
           {modeButton("range", "Pilih Rentang")}
         </div>
         {mode === "range" && (
           <>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            <label
+              htmlFor="granularity"
+              className="text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
               Rentang berdasarkan
-            </span>
-            <div className="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-neutral-800">
-              {(["day", "month", "year"] as const).map((g) => (
-                <button
-                  key={g}
-                  type="button"
-                  onClick={() => setGranularity(g)}
-                  className={`rounded-md px-3 py-1 text-sm font-medium ${
-                    granularity === g
-                      ? "bg-green-600 text-white"
-                      : "text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-neutral-700"
-                  }`}
-                >
-                  {g === "day" ? "Hari" : g === "month" ? "Bulan" : "Tahun"}
-                </button>
-              ))}
-            </div>
+            </label>
+            <select
+              id="granularity"
+              value={granularity}
+              onChange={(e) =>
+                setGranularity(e.target.value as ReportGranularity)
+              }
+              className={inputClass}
+            >
+              <option value="day">Hari/Tanggal</option>
+              <option value="month">Bulan</option>
+              <option value="year">Tahun</option>
+            </select>
             {granularity === "day" && (
               <>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className={inputClass}
-                  aria-label="Tanggal mulai"
-                />
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className={inputClass}
-                  aria-label="Tanggal akhir"
-                />
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="startDate"
+                    className="text-sm text-gray-600 dark:text-gray-300"
+                  >
+                    Dari
+                  </label>
+                  <input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="endDate"
+                    className="text-sm text-gray-600 dark:text-gray-300"
+                  >
+                    Sampai
+                  </label>
+                  <input
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
               </>
             )}
             {granularity === "month" && (
-              <input
-                type="month"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-                className={inputClass}
-                aria-label="Bulan"
-              />
+              <>
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="startMonth"
+                    className="text-sm text-gray-600 dark:text-gray-300"
+                  >
+                    Dari
+                  </label>
+                  <input
+                    id="startMonth"
+                    type="month"
+                    value={startMonth}
+                    onChange={(e) => setStartMonth(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="endMonth"
+                    className="text-sm text-gray-600 dark:text-gray-300"
+                  >
+                    Sampai
+                  </label>
+                  <input
+                    id="endMonth"
+                    type="month"
+                    value={endMonth}
+                    onChange={(e) => setEndMonth(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+              </>
             )}
             {granularity === "year" && (
-              <input
-                type="number"
-                min={2000}
-                max={2100}
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                className={inputClass}
-                aria-label="Tahun"
-              />
+              <>
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="startYear"
+                    className="text-sm text-gray-600 dark:text-gray-300"
+                  >
+                    Dari
+                  </label>
+                  <input
+                    id="startYear"
+                    type="number"
+                    min={2020}
+                    max={2035}
+                    value={startYear}
+                    onChange={(e) => setStartYear(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="endYear"
+                    className="text-sm text-gray-600 dark:text-gray-300"
+                  >
+                    Sampai
+                  </label>
+                  <input
+                    id="endYear"
+                    type="number"
+                    min={2020}
+                    max={2035}
+                    value={endYear}
+                    onChange={(e) => setEndYear(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+              </>
             )}
+            <button
+              type="button"
+              onClick={applyRange}
+              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+            >
+              Terapkan Rentang
+            </button>
           </>
         )}
       </div>
+
+      <p className="mb-4 text-sm font-medium text-gray-700 dark:text-gray-200">
+        {periodLabel}
+      </p>
 
       {isLoading && (
         <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
@@ -123,119 +203,60 @@ export default function Report() {
       {!isLoading && report && (
         <>
           <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+            <div className="rounded-xl border border-[#d8e5d8] bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-[#1a1b1d]">
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Total Pendapatan
+                Total pemasukan
               </p>
               <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-gray-100">
                 {formatCurrency(report.totalIncome)}
               </p>
+              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                {report.salesCount} transaksi penjualan
+              </p>
             </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+            <div className="rounded-xl border border-[#d8e5d8] bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-[#1a1b1d]">
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Total Pengeluaran
+                Total pengeluaran
               </p>
               <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-gray-100">
                 {formatCurrency(report.totalExpense)}
               </p>
+              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                {report.expensesCount} pengeluaran
+              </p>
             </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+            <div className="rounded-xl border border-[#d8e5d8] bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-[#1a1b1d]">
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Total bersih
               </p>
-              <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-gray-100">
+              <p
+                className={`mt-1 text-2xl font-bold ${
+                  report.profit < 0
+                    ? "text-red-600 dark:text-red-400"
+                    : "text-gray-800 dark:text-gray-100"
+                }`}
+              >
                 {formatCurrency(report.profit)}
               </p>
-            </div>
-          </div>
-
-          <div className="mb-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-            <h2 className="mb-4 text-lg font-bold text-gray-800 dark:text-gray-100">
-              Grafik harian
-            </h2>
-            <DailyChart daily={report.daily} />
-            <div className="mt-3 flex gap-4 text-xs text-gray-500 dark:text-gray-400">
-              <span className="flex items-center gap-1">
-                <span className="inline-block h-3 w-3 rounded-sm bg-green-500"></span>
-                Pendapatan
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="inline-block h-3 w-3 rounded-sm bg-red-400"></span>
-                Pengeluaran
-              </span>
-            </div>
-          </div>
-
-          <div className="mb-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-            <h2 className="mb-3 text-lg font-bold text-gray-800 dark:text-gray-100">
-              Per hari
-            </h2>
-            {report.daily.length === 0 ? (
-              <p className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                Belum ada data pada rentang ini.
+              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                Pemasukan − pengeluaran
               </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-200 text-gray-500 dark:border-neutral-800 dark:text-gray-400">
-                      <th className="py-2 pr-2 font-medium">Tanggal</th>
-                      <th className="py-2 pr-2 font-medium">Pendapatan</th>
-                      <th className="py-2 pr-2 font-medium">Pengeluaran</th>
-                      <th className="py-2 font-medium">Laba</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {report.daily.map((d) => (
-                      <tr
-                        key={d.date}
-                        className="border-b border-gray-100 last:border-0 dark:border-neutral-800"
-                      >
-                        <td className="py-2 pr-2 text-gray-600 dark:text-gray-300">
-                          {formatDate(d.date)}
-                        </td>
-                        <td className="py-2 pr-2 text-gray-600 dark:text-gray-300">
-                          {formatCurrency(d.totalIncome)}
-                        </td>
-                        <td className="py-2 pr-2 text-gray-600 dark:text-gray-300">
-                          {formatCurrency(d.totalExpense)}
-                        </td>
-                        <td className="py-2 font-medium text-gray-800 dark:text-gray-100">
-                          {formatCurrency(d.profit)}
-                        </td>
-                      </tr>
-                    ))}
-                    <tr className="font-bold text-gray-800 dark:text-gray-100">
-                      <td className="py-2 pr-2">Total</td>
-                      <td className="py-2 pr-2">
-                        {formatCurrency(report.totalIncome)}
-                      </td>
-                      <td className="py-2 pr-2">
-                        {formatCurrency(report.totalExpense)}
-                      </td>
-                      <td className="py-2">
-                        {formatCurrency(report.profit)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
+            </div>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="rounded-xl border border-[#d8e5d8] bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-[#1a1b1d]">
             <h2 className="mb-3 text-lg font-bold text-gray-800 dark:text-gray-100">
               Rincian transaksi
             </h2>
             {transactions.length === 0 ? (
               <p className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                Belum ada transaksi pada rentang ini.
+                Tidak ada transaksi pada periode ini.
               </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 text-gray-500 dark:border-neutral-800 dark:text-gray-400">
+                    <tr className="border-b border-[#d8e5d8] text-gray-500 dark:border-neutral-800 dark:text-gray-400">
                       <th className="py-2 pr-2 font-medium">Tanggal</th>
                       <th className="py-2 pr-2 font-medium">Keterangan</th>
                       <th className="py-2 pr-2 font-medium">Jenis</th>
@@ -246,10 +267,10 @@ export default function Report() {
                     {transactions.map((t) => (
                       <tr
                         key={t.id}
-                        className="border-b border-gray-100 last:border-0 dark:border-neutral-800"
+                        className="border-b border-[#d8e5d8] last:border-0 dark:border-neutral-800"
                       >
                         <td className="py-2 pr-2 text-gray-600 dark:text-gray-300">
-                          {formatDate(t.date)}
+                          {formatDateLong(t.date)} {t.time}
                         </td>
                         <td className="py-2 pr-2 font-medium text-gray-800 dark:text-gray-100">
                           {t.label}
