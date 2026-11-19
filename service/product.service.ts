@@ -9,8 +9,19 @@ import type {
 import type { ApiResponse, PagedResponse } from "../types/api";
 
 const productServices = {
-  getProducts: (params: ProductSearchParams) =>
-    instance.get<PagedResponse<Product>>(endpoint.PRODUCT, { params }),
+  getProducts: (params: ProductSearchParams) => {
+    // Jangan kirim name/category kosong — BE menolak string kosong (min 1).
+    // Kalau filter kosong, param-nya dihilangkan saja.
+    const { name, category, ...rest } = params;
+    const cleanParams = {
+      ...rest,
+      ...(name ? { name } : {}),
+      ...(category ? { category } : {}),
+    };
+    return instance.get<PagedResponse<Product>>(endpoint.PRODUCT, {
+      params: cleanParams,
+    });
+  },
   getProduct: (id: number) =>
     instance.get<ApiResponse<Product>>(`${endpoint.PRODUCT}/${id}`),
   createProduct: (payload: ICreateProduct) =>

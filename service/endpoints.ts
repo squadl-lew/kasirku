@@ -1,9 +1,10 @@
 // Object endpoint — hanya service yang memakainya.
-// Path mengikuti BE yang sudah jadi (doc/product.md): /api/products (jamak).
+// baseURL (VITE_API_PATH) sudah mengandung /api, jadi path di sini
+// TIDAK diawali /api lagi. Path mengikuti BE (doc/product.md): /products (jamak).
 export const endpoint = {
-  PRODUCT: "/api/products",
-  SALE: "/api/sales",
-  RESTOCK: "/api/restocks",
-  EXPENSE: "/api/expenses",
-  REPORT: "/api/reports",
+  PRODUCT: "/products",
+  SALE: "/sales",
+  RESTOCK: "/restocks",
+  EXPENSE: "/expenses",
+  REPORT: "/reports",
 } as const;
