@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import DashboardLayout from "./components/layout/DashboardLayout.tsx";
 import PlaceholderPage from "./components/PlaceholderPage.tsx";
+import Product from "./components/views/Product/Product.tsx";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -22,10 +23,7 @@ createRoot(document.getElementById("root")!).render(
               path="kasir"
               element={<PlaceholderPage title="Kasir" phase="Fase 2" />}
             />
-            <Route
-              path="produk"
-              element={<PlaceholderPage title="Produk" phase="Fase 1" />}
-            />
+            <Route path="produk" element={<Product />} />
             <Route
               path="restok"
               element={<PlaceholderPage title="Restok" phase="Fase 3" />}
