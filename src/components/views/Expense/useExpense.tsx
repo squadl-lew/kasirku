@@ -1,9 +1,9 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { expenseServices } from "../../../../service/expense.service";
+import { restockServices } from "../../../../service/restock.service";
 import {
   expenseSchema,
   type ExpenseFormValues,
@@ -11,65 +11,59 @@ import {
 import { alertConfirm } from "../../../lib/alert";
 import { todayISO } from "../../../../utils/format";
 import type { ToasterState } from "../../ui/Toaster";
-import type {
-  Expense,
-  ICreateExpense,
-  IUpdateExpense,
-} from "../../../../types/Expense";
+import type { Expense, ICreateExpense } from "../../../../types/Expense";
 
 export const useExpense = () => {
   const queryClient = useQueryClient();
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [category, setCategory] = useState("");
-  const [page, setPage] = useState(1);
+  const [date, setDate] = useState(todayISO());
+  const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<Expense | null>(null);
   const [detail, setDetail] = useState<Expense | null>(null);
   const [toaster, setToaster] = useState<ToasterState | null>(null);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["expenses", startDate, endDate, category, page],
+    queryKey: ["expenses", date, search],
     queryFn: async () => {
       const res = await expenseServices.getExpenses({
-        startDate,
-        endDate,
-        category,
-        page,
-        size: 10,
+        startDate: date || undefined,
+        endDate: date || undefined,
+        search: search || undefined,
+        page: 1,
+        size: 100,
       });
       return res.data; // { data: Expense[]; paging: Paging }
     },
   });
 
+  // Item restok untuk modal rincian (kalau expense berasal dari restok)
+  const { data: detailRestock } = useQuery({
+    queryKey: ["restocks", detail?.restockId],
+    queryFn: async () => {
+      const res = await restockServices.getRestock(detail!.restockId!);
+      return res.data.data;
+    },
+    enabled: detail?.restockId !== undefined,
+  });
+
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
-    defaultValues: { title: "", category: "", amount: 0, date: todayISO() },
+    defaultValues: { title: "", category: "Operasional", amount: 0, date: todayISO() },
     mode: "onBlur",
   });
 
-  const refresh = () =>
+  const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    queryClient.invalidateQueries({ queryKey: ["restocks"] });
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+  };
 
-  const { mutate: mutateCreate, isPending: isCreating } = useMutation({
+  const { mutate: mutateCreate, isPending: isSaving } = useMutation({
     mutationFn: (payload: ICreateExpense) =>
       expenseServices.createExpense(payload),
     onError: (error) =>
       setToaster({ type: "error", message: error.message }),
     onSuccess: () => {
       setToaster({ type: "success", message: "Pengeluaran berhasil ditambah" });
-      setFormOpen(false);
-      refresh();
-    },
-  });
-
-  const { mutate: mutateUpdate, isPending: isUpdating } = useMutation({
-    mutationFn: (payload: IUpdateExpense) =>
-      expenseServices.updateExpense(payload.id, payload),
-    onError: (error) =>
-      setToaster({ type: "error", message: error.message }),
-    onSuccess: () => {
-      setToaster({ type: "success", message: "Pengeluaran berhasil diubah" });
       setFormOpen(false);
       refresh();
     },
@@ -86,62 +80,50 @@ export const useExpense = () => {
   });
 
   const openCreate = () => {
-    setEditing(null);
-    form.reset({ title: "", category: "", amount: 0, date: todayISO() });
-    setFormOpen(true);
-  };
-
-  const openEdit = (expense: Expense) => {
-    setEditing(expense);
-    form.reset({ ...expense });
+    form.reset({ title: "", category: "Operasional", amount: 0, date: todayISO() });
     setFormOpen(true);
   };
 
   const handleDelete = async (expense: Expense) => {
-    if (!(await alertConfirm(`Hapus pengeluaran "${expense.title}"?`))) return;
+    const extra =
+      expense.restockId !== undefined
+        ? " Restoknya juga ikut terhapus dan stok dikembalikan."
+        : "";
+    if (!(await alertConfirm(`Hapus pengeluaran "${expense.title}"?${extra}`)))
+      return;
     mutateDelete(expense.id);
   };
 
   const handleSubmit = (values: ExpenseFormValues) => {
-    const description =
-      values.description === "" ? undefined : values.description;
-    if (values.id !== undefined) {
-      mutateUpdate({ ...values, id: values.id, description });
-    } else {
-      mutateCreate({ ...values, description });
-    }
+    mutateCreate({
+      title: values.title,
+      category: values.category,
+      amount: values.amount,
+      date: values.date,
+    });
   };
 
-  const handleFilter = (e: FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-  };
+  const showAllDates = () => setDate("");
 
   return {
     expenses: data?.data ?? [],
-    paging: data?.paging,
     isLoading,
     isError,
-    startDate,
-    setStartDate,
-    endDate,
-    setEndDate,
-    category,
-    setCategory,
-    page,
-    setPage,
-    handleFilter,
+    date,
+    setDate,
+    search,
+    setSearch,
+    showAllDates,
     form,
     formOpen,
     setFormOpen,
-    editing,
     openCreate,
-    openEdit,
     detail,
     setDetail,
+    detailRestock: detailRestock ?? null,
     handleDelete,
     onSubmit: form.handleSubmit(handleSubmit),
-    isSaving: isCreating || isUpdating,
+    isSaving,
     toaster,
   };
 };

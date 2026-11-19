@@ -31,6 +31,7 @@ export interface ExpenseSearchParams {
   startDate?: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
   category?: string;
+  search?: string; // cari keterangan (tambahan dummy, belum ada di BE)
   page: number;
   size: number;
 }

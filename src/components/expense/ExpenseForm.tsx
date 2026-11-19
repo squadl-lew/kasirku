@@ -1,17 +1,16 @@
 import type { UseFormReturn } from "react-hook-form";
 import type { ExpenseFormValues } from "../../lib/validation/expenseSchema";
-import type { Expense } from "../../../types/Expense";
 
-const categorySuggestions = [
-  "Bahan Baku",
+const categories = [
   "Operasional",
   "Belanja Stok",
+  "Transportasi",
+  "Utilitas",
   "Lainnya",
 ];
 
 interface ExpenseFormProps {
   form: UseFormReturn<ExpenseFormValues>;
-  editing: Expense | null;
   onSubmit: () => void;
   onClose: () => void;
   isSaving: boolean;
@@ -19,7 +18,6 @@ interface ExpenseFormProps {
 
 export default function ExpenseForm({
   form,
-  editing,
   onSubmit,
   onClose,
   isSaving,
@@ -40,7 +38,7 @@ export default function ExpenseForm({
           htmlFor="title"
           className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200"
         >
-          Judul
+          Keterangan
         </label>
         <input
           id="title"
@@ -59,19 +57,13 @@ export default function ExpenseForm({
         >
           Kategori
         </label>
-        <input
-          id="category"
-          type="text"
-          placeholder="Contoh: Bahan Baku"
-          list="expense-categories"
-          className={inputClass}
-          {...register("category")}
-        />
-        <datalist id="expense-categories">
-          {categorySuggestions.map((c) => (
-            <option key={c} value={c} />
+        <select id="category" className={inputClass} {...register("category")}>
+          {categories.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
           ))}
-        </datalist>
+        </select>
         {errors.category && (
           <p className={errorClass}>{errors.category.message}</p>
         )}
@@ -104,29 +96,14 @@ export default function ExpenseForm({
           >
             Tanggal
           </label>
-          <input id="date" type="date" className={inputClass} {...register("date")} />
+          <input
+            id="date"
+            type="date"
+            className={inputClass}
+            {...register("date")}
+          />
           {errors.date && <p className={errorClass}>{errors.date.message}</p>}
         </div>
-      </div>
-
-      <div>
-        <label
-          htmlFor="description"
-          className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200"
-        >
-          Deskripsi{" "}
-          <span className="font-normal text-gray-400">(opsional)</span>
-        </label>
-        <textarea
-          id="description"
-          placeholder="Deskripsi pengeluaran"
-          rows={2}
-          className={inputClass}
-          {...register("description")}
-        />
-        {errors.description && (
-          <p className={errorClass}>{errors.description.message}</p>
-        )}
       </div>
 
       <div className="flex justify-end gap-2 pt-2">
@@ -142,7 +119,7 @@ export default function ExpenseForm({
           disabled={isSaving}
           className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
         >
-          {isSaving ? "Menyimpan..." : editing ? "Simpan Perubahan" : "Simpan"}
+          {isSaving ? "Menyimpan..." : "Simpan"}
         </button>
       </div>
     </form>

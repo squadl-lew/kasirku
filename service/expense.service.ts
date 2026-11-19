@@ -3,6 +3,7 @@ import {
   loadDummyExpenses,
   saveDummyExpenses,
 } from "../src/lib/dummy/expenseStore";
+import { restockServices } from "./restock.service";
 import type { ApiResponse, PagedResponse } from "../types/api";
 import type {
   Expense,
@@ -12,11 +13,16 @@ import type {
 } from "../types/Expense";
 
 const expenseServices = {
-  getExpenses: async (params: ExpenseSearchParams) => {
+  getExpenses: async (params: ExpenseSearchParams & { search?: string }) => {
     const all = loadDummyExpenses()
       .filter((e) => !params.startDate || e.date >= params.startDate)
       .filter((e) => !params.endDate || e.date <= params.endDate)
       .filter((e) => !params.category || e.category === params.category)
+      .filter(
+        (e) =>
+          !params.search ||
+          e.title.toLowerCase().includes(params.search.toLowerCase()),
+      )
       .sort((a, b) => b.date.localeCompare(a.date));
     const start = (params.page - 1) * params.size;
     const data: PagedResponse<Expense> = {
@@ -63,9 +69,10 @@ const expenseServices = {
     const found = loadDummyExpenses().find((e) => e.id === id);
     if (!found) throw new Error("Expense is not found");
     if (found.restockId !== undefined) {
-      throw new Error(
-        "Pengeluaran dari restok tidak bisa dihapus, batalkan lewat menu Restok",
-      );
+      // Expense dari restok: hapus restoknya sekalian — stok dikembalikan,
+      // expense ikut terhapus (sama seperti Batalkan di menu Restok)
+      await restockServices.deleteRestock(found.restockId);
+      return { data: { data: "OK" } } as { data: ApiResponse<"OK"> };
     }
     saveDummyExpenses(loadDummyExpenses().filter((e) => e.id !== id));
     return { data: { data: "OK" } } as { data: ApiResponse<"OK"> };

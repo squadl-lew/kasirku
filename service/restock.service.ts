@@ -80,6 +80,12 @@ const restockServices = {
     return { data: { data: restock } } as { data: ApiResponse<Restock> };
   },
 
+  getRestock: async (id: number) => {
+    const restock = loadRestocks().find((r) => r.id === id);
+    if (!restock) throw new Error("Restock is not found");
+    return { data: { data: restock } } as { data: ApiResponse<Restock> };
+  },
+
   // Default dummy: restok bisa dibatalkan (stok & expense dikembalikan)
   deleteRestock: async (id: number) => {
     const restock = loadRestocks().find((r) => r.id === id);
